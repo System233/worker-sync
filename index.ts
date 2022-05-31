@@ -6,6 +6,7 @@
 
 export class SyncWorkerError extends Error { }
 type KeyOfType<T, F> = { [K in keyof T]: T[K] extends F ? K : never }[keyof T];
+type PromiseResultType<T>=T extends Promise<infer R>?R:never;
 export const DEFAULT_NAMESPACE = "$SyncWorker";
 export interface SyncWorkerSerializer<T = any> {
     serialize(data: T, buffer: Uint8Array): number;
@@ -59,10 +60,10 @@ export class SyncWorker<T extends Record<string, any>>{
         }
         return data;
     }
-    call<K extends KeyOfType<T, (...args: any) => any>>(method: K, ...args: Parameters<T[K]>): PromiseFulfilledResult<ReturnType<T[K]>> {
+    call<K extends KeyOfType<T, (...args: any) => any>>(method: K, ...args: Parameters<T[K]>): PromiseResultType<ReturnType<T[K]>> {
         return this.request(method, args,this.timeout);
     }
-    request<K extends KeyOfType<T, (...args: any) => any>>(method: K, args: Parameters<T[K]>, timeout?: number): PromiseFulfilledResult<ReturnType<T[K]>> {
+    request<K extends KeyOfType<T, (...args: any) => any>>(method: K, args: Parameters<T[K]>, timeout?: number): PromiseResultType<ReturnType<T[K]>> {
         timeout = timeout ?? this.timeout;
         this.serialize(args);
         this.postMessage({
